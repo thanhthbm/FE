@@ -11,7 +11,7 @@ export class Http {
     this.accessToken = getAccessTokenFromLS()
     this.instance = axios.create({
       baseURL: config.baseUrl,
-      timeout: 10000,
+      timeout: 30000,
       headers: {
         'Content-Type': 'application/json'
       }
@@ -19,7 +19,7 @@ export class Http {
     this.instance.interceptors.request.use(
       (config) => {
         if (this.accessToken && config.headers) {
-          config.headers.authorization = this.accessToken
+          config.headers.authorization = `Bearer ${this.accessToken}`
           return config
         }
         return config

@@ -1,15 +1,12 @@
 import React from 'react'
 import AuthHeader from '../../components/AuthHeader'
+import { Outlet } from 'react-router-dom'
 
-interface Props {
-  children?: React.ReactNode
-}
-
-const AuthLayout = ({ children }: Props) => {
+const AuthLayout = () => {
   return (
     <div>
       <AuthHeader />
-      {children}
+      <Outlet />
     </div>
   )
 }

@@ -16,3 +16,5 @@ const authApi = {
     return http.post(URL_VERIFY, body)
   }
 }
+
+export default authApi

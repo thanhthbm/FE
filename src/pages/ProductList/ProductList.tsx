@@ -1,6 +1,10 @@
 import React from 'react'
 
-const ProductList = () => {
+interface IProps {
+  categoryType: string
+}
+
+const ProductList = (props: IProps) => {
   return <div>product list</div>
 }
 
