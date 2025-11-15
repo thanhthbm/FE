@@ -7,7 +7,7 @@ import { Resolver, useForm } from 'react-hook-form'
 import { registerSchema } from '../../validations/auth.schema'
 import { useMutation } from '@tanstack/react-query'
 import authApi from '../../apis/auth.api'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 export default function SignUp() {
@@ -22,6 +22,8 @@ export default function SignUp() {
   })
 
   const [error, setError] = useState<string>()
+  const [username, setUsername] = useState<string>()
+  const navigate = useNavigate()
 
   const [showPassword, setShowPassword] = useState(false)
 
@@ -29,13 +31,13 @@ export default function SignUp() {
   const registerMutation = useMutation({
     mutationFn: (body: RegistrationRequest) => authApi.registerAccount(body),
     onSuccess: (data) => {
-      console.log('register success', data)
-      // redirect / thông báo thành công ở đây
+      sessionStorage.setItem('username', username as string)
+      navigate('/verify')
     },
     onError: (err: any) => {
       console.error('register error', err)
       if (axios.isAxiosError(err)) {
-        const status = err.response?.status
+        const status = err.response?.data.statusCode
         const message = err.response?.data?.message
         setError(message)
       }
@@ -43,6 +45,7 @@ export default function SignUp() {
   })
 
   const onSubmit = (data: RegistrationRequest) => {
+    setUsername(data.email)
     registerMutation.mutate(data)
   }
 
@@ -61,30 +64,20 @@ export default function SignUp() {
         </div>
       </div>
 
-      {/* Right Side - Form */}
       <div className='flex-1 flex items-center justify-center p-8 bg-white'>
         <div className='w-full max-w-md'>
           <h1 className='text-3xl font-semibold text-gray-900 mb-8'>Sign Up</h1>
 
-          {/* Google Sign Up Button */}
           <GoogleButton />
 
-          {/* Divider */}
           <div className='flex items-center my-7'>
             <div className='flex-1 h-px bg-gray-300'></div>
             <span className='px-4 text-sm text-gray-500'>OR</span>
             <div className='flex-1 h-px bg-gray-300'></div>
           </div>
 
-          {/* Show server error if any */}
           {registerMutation.isError && (
-            <div className='mb-4 text-sm text-red-600'>
-              {/*
-                Nếu err trả về object, bạn có thể map message phù hợp.
-                Hiện tại hiển thị string chung.
-              */}
-              {error ? error : 'Register failed'}
-            </div>
+            <div className='mb-4 text-sm text-red-600'>{error ? error : 'Register failed'}</div>
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} noValidate>

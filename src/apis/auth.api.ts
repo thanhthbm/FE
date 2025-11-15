@@ -5,15 +5,22 @@ export const URL_LOGIN = 'api/auth/login'
 export const URL_REGISTER = 'api/auth/register'
 export const URL_VERIFY = 'api/auth/verify'
 
+export interface ApiResponse<T> {
+  statusCode: number
+  status: string
+  message?: string
+  data?: T
+}
+
 const authApi = {
   registerAccount(body: RegistrationRequest) {
-    return http.post<RegistrationResponse>(URL_REGISTER, body)
+    return http.post<ApiResponse<RegistrationResponse>>(URL_REGISTER, body)
   },
   login(body: LoginRequest) {
-    return http.post<UserToken>(URL_LOGIN, body)
+    return http.post<ApiResponse<UserToken>>(URL_LOGIN, body)
   },
   verify(body: VerifyRequest) {
-    return http.post(URL_VERIFY, body)
+    return http.post<ApiResponse<null>>(URL_VERIFY, body)
   }
 }
 

@@ -19,6 +19,7 @@ export default function Login() {
   const navigate = useNavigate()
   const { setIsAuthenticated } = useContext(AuthContext)
   const [username, setUsername] = useState<string>()
+  const [error, setError] = useState<string>()
 
   const {
     register,
@@ -36,20 +37,28 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: (body: LoginRequest) => authApi.login(body),
-    onSuccess: (data) => {
-      console.log(data)
-      setAccessTokenToLs(data.data.token)
+    onSuccess: (res) => {
+      console.log(res)
+      setAccessTokenToLs(res.data?.data?.token as string)
       setIsAuthenticated(true)
       navigate('/')
     },
     onError: (err: any) => {
       console.log(err)
       if (axios.isAxiosError(err)) {
-        const code = err.response?.status
-        if (code === 403) {
-          // return <Navigate username={username} />
-          sessionStorage.setItem('username', username as string)
-          navigate('/verify')
+        const code = err.response?.data.statusCode
+        const message = err.response?.data.message
+
+        switch (code) {
+          case 401:
+            setError(message)
+            break
+          case 400:
+            navigate('/verify')
+            sessionStorage.setItem('username', username as string)
+            break
+          default:
+            setError('An error has occured')
         }
       }
     }
@@ -133,7 +142,7 @@ export default function Login() {
               </a>
             </div>
 
-            {loginMutation.isError && <p className='text-sm text-red-600 mt-1'>An error has occurred</p>}
+            {error && <p className='text-sm text-red-600 mt-1'>{error}</p>}
             <button
               type='submit'
               className='w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors'
