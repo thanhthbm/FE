@@ -1,7 +1,9 @@
+import { data } from 'react-router-dom'
 import axios, { AxiosInstance } from 'axios'
 import { getAccessTokenFromLS } from './auth'
 import config from '../constants/config'
 import { error } from 'console'
+import { URL_LOGIN, URL_REGISTER } from '../apis/auth.api'
 
 export class Http {
   instance: AxiosInstance
@@ -18,15 +20,13 @@ export class Http {
     })
     this.instance.interceptors.request.use(
       (config) => {
-        if (this.accessToken && config.headers) {
-          config.headers.authorization = `Bearer ${this.accessToken}`
-          return config
+        const token = getAccessTokenFromLS()
+        if (token && config.headers) {
+          config.headers.authorization = `Bearer ${token}`
         }
         return config
       },
-      (error) => {
-        return Promise.reject(error)
-      }
+      (error) => Promise.reject(error)
     )
   }
 }

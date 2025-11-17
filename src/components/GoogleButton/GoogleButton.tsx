@@ -1,9 +1,15 @@
 import React from 'react'
+import config from '../../constants/config'
 
 const GoogleButton = () => {
+  const handleGoogleLogin = () => {
+    window.location.href = `${config.baseUrl}oauth2/authorization/google`
+  }
+
   return (
     <button
       type='button'
+      onClick={handleGoogleLogin}
       className='w-full flex items-center justify-center gap-3 px-4 py-3 border rounded-md text-sm font-medium mb-6 hover:shadow-sm'
     >
       <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 533.5 544.3' className='w-5 h-5' aria-hidden>

@@ -1,24 +1,28 @@
 import React, { useContext } from 'react'
-import { Navigate, Outlet, useRoutes } from 'react-router-dom'
+import { Navigate, Outlet, useRoutes, useLocation } from 'react-router-dom'
 import AuthLayout from './layouts/AuthLayout'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import ProductList from './pages/ProductList'
 import { AuthContext } from './contexts/auth.context'
-import { clearAccessTokenFromLS } from './utils/auth'
-import Logout from './components/Logout/index'
+import Logout from './components/Logout'
 import Verify from './pages/VerifyPage'
 import Shop from './pages/Shop'
 import MainLayout from './layouts/MainLayout'
+import ProductDetail from './pages/ProductDetail'
+import NotFound from './pages/NotFound'
+import OAuth2Callback from './components/OAuth2Callback'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AuthContext)
-  return isAuthenticated ? <Outlet /> : <Navigate to='/login' />
+  const location = useLocation()
+
+  return isAuthenticated ? <Outlet /> : <Navigate to='/login' replace state={{ from: location }} />
 }
 
 function RejectedRoute() {
   const { isAuthenticated } = useContext(AuthContext)
-  return !isAuthenticated ? <Outlet /> : <Navigate to='/' />
+  return !isAuthenticated ? <Outlet /> : <Navigate to='/' replace />
 }
 
 export default function useRouteElements() {
@@ -29,48 +33,43 @@ export default function useRouteElements() {
         {
           element: <AuthLayout />,
           children: [
-            {
-              path: 'login',
-              element: <Login />
-            },
-            {
-              path: 'register',
-              element: <SignUp />
-            },
-            {
-              path: 'verify',
-              element: <Verify />
-            }
+            { path: 'login', element: <Login /> },
+            { path: 'register', element: <SignUp /> },
+            { path: 'verify', element: <Verify /> }
           ]
+        },
+        {
+          element: <OAuth2Callback />,
+          path: 'oauth2/callback'
         }
       ]
     },
+
     {
       element: <ProtectedRoute />,
       children: [
         {
           element: <MainLayout />,
           children: [
+            { index: true, element: <Shop /> },
+
+            { path: 'men', element: <ProductList category={'men'} /> },
+            { path: 'women', element: <ProductList category={'women'} /> },
+            { path: 'kids', element: <ProductList category={'kids'} /> },
+
             {
-              path: '/',
-              element: <Shop />
+              path: 'product',
+              children: [
+                { index: true, element: <Navigate to='/' replace /> },
+
+                { path: ':productId', element: <ProductDetail /> }
+              ]
             },
-            {
-              path: '/men',
-              element: <ProductList categoryType={'men'} />
-            },
-            {
-              path: '/women',
-              element: <ProductList categoryType={'women'} />
-            },
-            {
-              path: '/kids',
-              element: <ProductList categoryType={'kids'} />
-            },
-            {
-              path: '/logout',
-              element: <Logout />
-            }
+
+            { path: 'logout', element: <Logout /> },
+
+            // 404 trong scope MainLayout
+            { path: '*', element: <NotFound /> }
           ]
         }
       ]
