@@ -38,19 +38,15 @@ export default function ProductList(props: IProps) {
 
   const categoryTypes: CategoryType[] = categoryTypesQuery.data ?? []
 
-  // Fetch products (use selectedCategoryType in filters)
   const productsQuery = useQuery({
     queryKey: ['products', category, currentPage, sortBy, priceRange, selectedCategoryType],
     queryFn: () => {
       const filters: any[] = []
 
-      // Category filter
       if (category) filters.push(sfEqual('category.code', category.toUpperCase()))
-      // Price range
       if (priceRange[0] > 0) filters.push(sfGt('price', priceRange[0]))
       if (priceRange[1] < 10000000) filters.push(sfLt('price', priceRange[1]))
 
-      // Category types (if any selected) -> OR of equals
       if (selectedCategoryType.length > 0) {
         const typeFilters = selectedCategoryType.map((t) => sfEqual('categoryType.code', String(t).toUpperCase()))
         filters.push(sfOr(typeFilters))
@@ -67,10 +63,8 @@ export default function ProductList(props: IProps) {
     }
   })
 
-  // products is always an array (never undefined)
   const products: Product[] = productsQuery.data?.data?.data?.result ?? []
 
-  // meta may be undefined
   const meta = productsQuery.data?.data?.data?.meta
 
   const handlePriceRangeChange = (e: React.ChangeEvent<HTMLInputElement>): void => {

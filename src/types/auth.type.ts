@@ -17,7 +17,7 @@ export type LoginRequest = {
 }
 
 export type UserToken = {
-  token: string
+  accessToken: string
 }
 
 export type VerifyRequest = {

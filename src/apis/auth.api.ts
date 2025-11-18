@@ -4,6 +4,7 @@ import http from '../utils/http'
 export const URL_LOGIN = 'api/auth/login'
 export const URL_REGISTER = 'api/auth/register'
 export const URL_VERIFY = 'api/auth/verify'
+export const URL_REFRESH = 'api/auth/refresh'
 
 export interface ApiResponse<T> {
   statusCode: number
@@ -21,6 +22,9 @@ const authApi = {
   },
   verify(body: VerifyRequest) {
     return http.post<ApiResponse<null>>(URL_VERIFY, body)
+  },
+  refresh() {
+    return http.post<ApiResponse<UserToken>>(URL_REFRESH, {}, { withCredentials: true })
   }
 }
 

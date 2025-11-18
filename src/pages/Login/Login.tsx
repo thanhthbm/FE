@@ -39,7 +39,7 @@ export default function Login() {
     mutationFn: (body: LoginRequest) => authApi.login(body),
     onSuccess: (res) => {
       console.log(res)
-      setAccessTokenToLs(res.data?.data?.token as string)
+      setAccessTokenToLs(res.data?.data?.accessToken as string)
       setIsAuthenticated(true)
       navigate('/')
     },
