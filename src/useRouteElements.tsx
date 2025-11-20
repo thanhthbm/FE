@@ -12,6 +12,8 @@ import MainLayout from './layouts/MainLayout'
 import ProductDetail from './pages/ProductDetail'
 import NotFound from './pages/NotFound'
 import OAuth2Callback from './components/OAuth2Callback'
+import Cart from './pages/Cart'
+import WishList from './pages/WishList'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AuthContext)
@@ -65,10 +67,17 @@ export default function useRouteElements() {
                 { path: ':productId', element: <ProductDetail /> }
               ]
             },
+            {
+              path: 'cart',
+              element: <Cart />
+            },
+            {
+              path: 'wishlist',
+              element: <WishList />
+            },
 
             { path: 'logout', element: <Logout /> },
 
-            // 404 trong scope MainLayout
             { path: '*', element: <NotFound /> }
           ]
         }

@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Heart, Minus, Plus, ChevronDown, ShoppingCart } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import { productApi } from '../../apis/product.api'
 import { formatPriceToStr } from '../../utils/format'
+import useCart from '../../hooks/useCart'
+import { useWishList } from '../../hooks/useWishList'
 
 export default function ProductDetail() {
   const { productId } = useParams<{ productId: string }>()
@@ -11,7 +13,9 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState<string>('')
   const [quantity, setQuantity] = useState(1)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [isFavorite, setIsFavorite] = useState(false)
+
+  const { addToCart, isAdding } = useCart()
+  const { isInWishList, toggleWishList, isToggling } = useWishList()
 
   // Fetch product data
   const productQuery = useQuery({
@@ -21,6 +25,7 @@ export default function ProductDetail() {
   })
 
   const product = productQuery.data
+  const isFavorite = product ? isInWishList(product.id) : false
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const uniqueColors = product?.variants
@@ -39,14 +44,15 @@ export default function ProductDetail() {
         .map((r) => r.url as string)
     : []
 
-  React.useEffect(() => {
+  useEffect(() => {
+    window.scrollTo(0, 0)
+
     if (product && product.variants && product.variants.length > 0) {
       if (!selectedColor && uniqueColors.length > 0) setSelectedColor(uniqueColors[0])
       if (!selectedSize && uniqueSizes.length > 0) setSelectedSize(uniqueSizes[0])
     }
   }, [product, uniqueColors, uniqueSizes, selectedColor, selectedSize])
 
-  // Get available stock for selected variant
   const selectedVariant = product?.variants?.find((v) => v.color === selectedColor && v.size === selectedSize)
 
   const handleQuantityChange = (type: 'increase' | 'decrease') => {
@@ -55,6 +61,25 @@ export default function ProductDetail() {
     } else if (type === 'decrease' && quantity > 1) {
       setQuantity(quantity - 1)
     }
+  }
+
+  const handleAddToCart = () => {
+    if (!product || !selectedVariant) return
+
+    addToCart({
+      productId: product.id,
+      variantId: selectedVariant.id,
+      productName: product.name,
+      variantName: `${selectedColor} - ${selectedSize}`,
+      price: product.price,
+      quantity: quantity,
+      imageUrl: images.length > 0 ? images[selectedImageIndex] : product.thumbnail || ''
+    })
+  }
+
+  const handleToggleWishlist = () => {
+    if (!product) return
+    toggleWishList(product.id)
   }
 
   if (productQuery.isLoading) {
@@ -242,14 +267,20 @@ export default function ProductDetail() {
             {/* Add to Cart & Wishlist */}
             <div className='flex gap-4 mb-8'>
               <button
+                onClick={handleAddToCart}
+                disabled={
+                  !selectedVariant || !selectedVariant.stockQuantity || selectedVariant.stockQuantity === 0 || isAdding
+                }
                 className='flex-1 bg-pink-600 hover:bg-pink-700 text-white py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed'
-                disabled={!selectedVariant || !selectedVariant.stockQuantity || selectedVariant.stockQuantity === 0}
               >
                 <ShoppingCart className='w-5 h-5' />
-                Add to Cart
+                {/* Hiển thị trạng thái loading */}
+                {isAdding ? 'Adding...' : 'Add to Cart'}
               </button>
+
               <button
-                onClick={() => setIsFavorite(!isFavorite)}
+                onClick={handleToggleWishlist}
+                disabled={isToggling}
                 className={`p-4 rounded-lg border-2 transition-colors ${
                   isFavorite ? 'border-pink-600 bg-pink-50' : 'border-gray-300 hover:border-gray-400'
                 }`}

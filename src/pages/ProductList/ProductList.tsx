@@ -173,25 +173,10 @@ export default function ProductList(props: IProps) {
 
           {/* Main Content */}
           <div className='flex-1'>
-            {/* Breadcrumb */}
-            {products.length > 0 && (
-              <div className='text-sm text-gray-600 mb-4'>
-                <span>Home</span>
-                <span className='mx-2'>/</span>
-                {products[0].categoryName && (
-                  <>
-                    <span>{products[0].categoryName}</span>
-                    <span className='mx-2'>/</span>
-                  </>
-                )}
-                {products[0].categoryTypeName && <span className='text-gray-900'>{products[0].categoryTypeName}</span>}
-              </div>
-            )}
-
             {/* Header */}
             <div className='flex justify-between items-center mb-6'>
               <div>
-                <h1 className='text-4xl font-bold text-gray-900 mb-2'>{products[0]?.categoryTypeName || 'Products'}</h1>
+                <h1 className='text-4xl font-bold text-gray-900 mb-2'>{products[0]?.categoryName || 'Products'}</h1>
                 {meta && (
                   <p className='text-gray-600'>
                     Showing {(meta.page - 1) * meta.pageSize + 1}-{Math.min(meta.page * meta.pageSize, meta.total)} of{' '}
