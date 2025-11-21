@@ -1,47 +1,24 @@
 import React, { useState } from 'react'
-import { Plus, Pencil, Trash2, MapPin, Phone, Star, Loader2 } from 'lucide-react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { addressApi } from '../../apis/address.api'
-import { toast } from 'react-toastify'
-import AddressForm from '../../components/AddressForm/AddressForm'
+import { Plus, Pencil, Trash2, MapPin, Phone, Loader2 } from 'lucide-react'
 import { Address } from '../../types/address.type'
+import AddressForm from '../../components/AddressForm/AddressForm'
+import { useAddress } from '../../hooks/useAddress' // Import hook
 
 export default function AddressBook() {
-  const queryClient = useQueryClient()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
 
-  // 1. Fetch Data
-  const { data, isLoading } = useQuery({
-    queryKey: ['addresses'],
-    queryFn: addressApi.getAddresses,
-    staleTime: 1000 * 60 * 5
-  })
-
-  const addresses = data?.data?.data || []
-
-  const deleteMutation = useMutation({
-    mutationFn: addressApi.deleteAddress,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['addresses'] })
-      toast.success('Đã xóa địa chỉ')
-    },
-    onError: () => toast.error('Không thể xóa địa chỉ này')
-  })
-
-  const setDefaultMutation = useMutation({
-    mutationFn: addressApi.setDefault,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['addresses'] })
-      toast.success('Đã đổi địa chỉ mặc định')
-    }
-  })
+  const { addresses, isLoading, deleteAddress, setDefaultAddress, isDeleting, isSettingDefault } = useAddress()
 
   // Handlers
   const handleDelete = (id: string) => {
-    if (window.confirm('Bạn chắc chắn muốn xóa địa chỉ này?')) {
-      deleteMutation.mutate(id)
+    if (window.confirm('Are you sure you want to delete this address?')) {
+      deleteAddress(id)
     }
+  }
+
+  const handleSetDefault = (id: string) => {
+    setDefaultAddress(id)
   }
 
   const handleEdit = (addr: Address) => {
@@ -67,20 +44,22 @@ export default function AddressBook() {
     )
   }
 
+  const isActionLoading = isDeleting || isSettingDefault
+
   return (
     <div className='bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[600px]'>
       {/* Header */}
       <div className='px-6 py-5 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/50'>
         <div>
-          <h2 className='text-lg font-bold text-gray-900'>Sổ địa chỉ</h2>
-          <p className='text-sm text-gray-500 mt-1'>Quản lý địa chỉ giao hàng và thanh toán</p>
+          <h2 className='text-lg font-bold text-gray-900'>Address Book</h2>
+          <p className='text-sm text-gray-500 mt-1'>Manage shipping and billing addresses</p>
         </div>
         <button
           onClick={handleAddNew}
           className='flex items-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow'
         >
           <Plus className='w-4 h-4' />
-          Thêm địa chỉ mới
+          Add New Address
         </button>
       </div>
 
@@ -91,9 +70,9 @@ export default function AddressBook() {
             <div className='w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-3'>
               <MapPin className='w-6 h-6 text-gray-400' />
             </div>
-            <p className='font-medium'>Bạn chưa lưu địa chỉ nào.</p>
+            <p className='font-medium'>You have not saved any addresses yet.</p>
             <button onClick={handleAddNew} className='text-pink-600 hover:underline text-sm mt-1 font-medium'>
-              Thêm ngay
+              Add now
             </button>
           </div>
         ) : (
@@ -122,14 +101,16 @@ export default function AddressBook() {
                     <button
                       onClick={() => handleEdit(addr)}
                       className='p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors'
-                      title='Chỉnh sửa'
+                      title='Edit'
+                      disabled={isActionLoading}
                     >
                       <Pencil className='w-4 h-4' />
                     </button>
                     <button
                       onClick={() => handleDelete(addr.id)}
                       className='p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors'
-                      title='Xóa'
+                      title='Delete'
+                      disabled={isActionLoading}
                     >
                       <Trash2 className='w-4 h-4' />
                     </button>
@@ -154,10 +135,11 @@ export default function AddressBook() {
                 {/* Set Default Button (Nếu chưa phải mặc định) */}
                 {!addr.isDefault && (
                   <button
-                    onClick={() => setDefaultMutation.mutate(addr.id)}
-                    className='mt-3 w-full py-2 text-xs font-medium text-gray-500 bg-gray-50 hover:bg-pink-50 hover:text-pink-600 rounded-lg transition-colors border border-transparent hover:border-pink-100'
+                    onClick={() => handleSetDefault(addr.id)}
+                    disabled={isActionLoading}
+                    className='mt-3 w-full py-2 text-xs font-medium text-gray-500 bg-gray-50 hover:bg-pink-50 hover:text-pink-600 rounded-lg transition-colors border border-transparent hover:border-pink-100 disabled:opacity-50'
                   >
-                    Đặt làm mặc định
+                    Set as Default
                   </button>
                 )}
               </div>
@@ -169,20 +151,12 @@ export default function AddressBook() {
       {/* MODAL OVERLAY */}
       {isModalOpen && (
         <div className='fixed inset-0 flex items-center justify-center p-4 px-4 sm:px-0' style={{ zIndex: 100 }}>
-          {/* Backdrop - CHO PHÉP CLICK XUYÊN QUA */}
           <div
             className='absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200'
             style={{ zIndex: 100, pointerEvents: 'auto' }}
             onClick={handleCloseModal}
-            onMouseDown={(e) => {
-              // Chỉ đóng modal nếu click trực tiếp vào backdrop
-              if (e.target === e.currentTarget) {
-                handleCloseModal()
-              }
-            }}
           />
 
-          {/* Modal Content */}
           <div
             className='relative bg-white rounded-xl shadow-2xl w-full max-w-2xl animate-in zoom-in-95 duration-200 mx-4 flex flex-col max-h-[85vh]'
             style={{ zIndex: 101, pointerEvents: 'auto' }}
@@ -190,7 +164,7 @@ export default function AddressBook() {
           >
             <div className='px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center flex-shrink-0'>
               <h3 className='text-lg font-bold text-gray-900'>
-                {editingAddress ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ mới'}
+                {editingAddress ? 'Update Address' : 'Add New Address'}
               </h3>
               <button
                 onClick={handleCloseModal}

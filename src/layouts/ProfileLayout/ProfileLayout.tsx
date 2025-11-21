@@ -5,9 +5,9 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 export default function ProfileLayout() {
   // Danh sách Menu
   const navItems = [
-    { icon: User, label: 'Hồ sơ', path: '/profile', end: true },
-    { icon: MapPin, label: 'Sổ địa chỉ', path: '/profile/address', end: false },
-    { icon: ShoppingBag, label: 'Đơn mua', path: '/profile/orders', end: false }
+    { icon: User, label: 'Profile', path: '/profile', end: true },
+    { icon: MapPin, label: 'Address Book', path: '/profile/address', end: false },
+    { icon: ShoppingBag, label: 'My orders', path: '/profile/orders', end: false }
   ]
 
   return (

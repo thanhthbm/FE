@@ -47,7 +47,7 @@ const NewArrival = () => {
                 </div>
                 <div className='p-4'>
                   <h3 className='font-semibold text-gray-900 mb-2'>{product.name}</h3>
-                  <p className='text-lg font-bold text-gray-900'>{formatPriceToStr(product.price)} VNĐ</p>
+                  <p className='text-lg font-bold text-gray-900'>{formatPriceToStr(product.price)} VND</p>
                 </div>
               </Link>
             ))

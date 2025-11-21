@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm, Controller } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
 import { toast } from 'react-toastify'
 import { Loader2, Save } from 'lucide-react'
 import { useLocation } from '../../hooks/useLocation'
+import { useAddress } from '../../hooks/useAddress'
 import { Address } from '../../types/address.type'
-import { addressApi } from '../../apis/address.api'
 import SearchableSelect from '../SearchableSelect/SearchableSelect'
+import { addressSchema, AddressSchema } from 'src/validations/address.schema'
 
 interface AddressFormProps {
   initialData?: Address | null
@@ -14,155 +16,209 @@ interface AddressFormProps {
 }
 
 export default function AddressForm({ initialData, onSuccess, onCancel }: AddressFormProps) {
-  const queryClient = useQueryClient()
+  const { addAddress, updateAddress, isAdding, isUpdating } = useAddress()
 
-  // STATE: Quản lý ID để call API lấy danh sách con
   const [provinceId, setProvinceId] = useState<string>('')
   const [wardId, setWardId] = useState<string>('')
 
-  const [formData, setFormData] = useState<Omit<Address, 'id'>>({
-    receiverName: '',
-    phoneNumber: '',
-    province: '',
-    ward: '',
-    detail: '',
-    isDefault: false
-  })
-
-  // HOOK: Lấy data địa chính
   const { provinces, wards, isLoadingProvinces, isLoadingWards } = useLocation(provinceId)
 
-  // FILL DATA KHI EDIT
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        receiverName: initialData.receiverName,
-        phoneNumber: initialData.phoneNumber,
-        province: initialData.province,
-        ward: initialData.ward,
-        detail: initialData.detail,
-        isDefault: initialData.isDefault
-      })
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors }
+  } = useForm<AddressSchema>({
+    resolver: yupResolver(addressSchema),
+    defaultValues: {
+      receiverName: initialData?.receiverName || '',
+      phoneNumber: initialData?.phoneNumber || '',
+      province: initialData?.province || '',
+      ward: initialData?.ward || '',
+      detail: initialData?.detail || '',
+      isDefault: initialData?.isDefault || false
     }
-  }, [initialData])
-
-  // MUTATION
-  const mutation = useMutation({
-    mutationFn: (body: Omit<Address, 'id'>) => {
-      return initialData ? addressApi.updateAddress(initialData.id, body) : addressApi.createAddress(body)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['addresses'] })
-      toast.success(initialData ? 'Đã cập nhật địa chỉ' : 'Đã thêm địa chỉ mới')
-      onSuccess()
-    },
-    onError: () => toast.error('Lỗi khi lưu địa chỉ')
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.province || !formData.ward) {
-      toast.warn('Vui lòng chọn đầy đủ Tỉnh/Thành và Quận/Huyện')
-      return
+  // Watch province để reset ward khi thay đổi
+  const currentProvince = watch('province')
+
+  useEffect(() => {
+    if (initialData) {
+      setValue('receiverName', initialData.receiverName)
+      setValue('phoneNumber', initialData.phoneNumber)
+      setValue('province', initialData.province)
+      setValue('ward', initialData.ward)
+      setValue('detail', initialData.detail)
+      setValue('isDefault', initialData.isDefault)
     }
-    mutation.mutate(formData)
+  }, [initialData, setValue])
+
+  const onSubmit = (data: AddressSchema) => {
+    if (initialData) {
+      updateAddress(
+        { id: initialData.id, body: data },
+        {
+          onSuccess: () => onSuccess()
+        }
+      )
+    } else {
+      addAddress(data, {
+        onSuccess: () => onSuccess()
+      })
+    }
   }
 
   const provinceOptions = useMemo(
-    () => provinces.map((p: any) => ({ label: p.full_name || p.name, value: p.id })),
+    () =>
+      provinces.map((p: any) => ({
+        label: p.full_name || p.name,
+        value: String(p.id)
+      })),
     [provinces]
   )
 
-  const wardOptions = useMemo(() => wards.map((w: any) => ({ label: w.full_name || w.name, value: w.id })), [wards])
+  const wardOptions = useMemo(
+    () =>
+      wards.map((w: any) => ({
+        label: w.full_name || w.name,
+        value: String(w.id)
+      })),
+    [wards]
+  )
+
+  const isLoading = isAdding || isUpdating
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-5'>
+    <form onSubmit={handleSubmit(onSubmit)} className='space-y-5'>
       {/* Tên & SĐT */}
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <div className='space-y-1.5'>
-          <label className='text-sm font-medium text-gray-700'>Tên người nhận</label>
-          <input
-            type='text'
-            className='w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-500 transition-colors'
-            value={formData.receiverName}
-            onChange={(e) => setFormData({ ...formData, receiverName: e.target.value })}
-            required
-            placeholder='Nguyễn Văn A'
+          <label className='text-sm font-medium text-gray-700'>Receiver Name</label>
+          <Controller
+            name='receiverName'
+            control={control}
+            render={({ field }) => (
+              <input
+                {...field}
+                type='text'
+                className={`w-full p-2.5 border rounded-lg focus:outline-none transition-colors ${
+                  errors.receiverName ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-pink-500'
+                }`}
+              />
+            )}
           />
+          {errors.receiverName && <p className='text-xs text-red-500 mt-1'>{String(errors.receiverName.message)}</p>}
         </div>
+
         <div className='space-y-1.5'>
-          <label className='text-sm font-medium text-gray-700'>Số điện thoại</label>
-          <input
-            type='tel'
-            className='w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-500 transition-colors'
-            value={formData.phoneNumber}
-            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-            required
-            placeholder='0912...'
+          <label className='text-sm font-medium text-gray-700'>Phone number</label>
+          <Controller
+            name='phoneNumber'
+            control={control}
+            render={({ field }) => (
+              <input
+                {...field}
+                type='tel'
+                className={`w-full p-2.5 border rounded-lg focus:outline-none transition-colors ${
+                  errors.phoneNumber ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-pink-500'
+                }`}
+              />
+            )}
           />
+          {errors.phoneNumber && <p className='text-xs text-red-500 mt-1'>{String(errors.phoneNumber.message)}</p>}
         </div>
       </div>
 
+      {/* ĐỊA CHÍNH */}
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <div className='space-y-1.5'>
-          <label className='text-sm font-medium text-gray-700'>Tỉnh / Thành phố</label>
-          <SearchableSelect
-            options={provinceOptions}
-            value={provinceId}
-            isLoading={isLoadingProvinces}
-            onChange={(val) => {
-              setProvinceId(val)
-              setWardId('')
-              // Tìm tên dựa trên ID để lưu vào formData
-              const name = provinces.find((p: any) => p.id === val)?.full_name || ''
-              setFormData((prev) => ({ ...prev, province: name, ward: '' }))
-            }}
-            placeholder={formData.province || 'Chọn Tỉnh/Thành'}
+          <label className='text-sm font-medium text-gray-700'>Province</label>
+          <Controller
+            name='province'
+            control={control}
+            render={({ field }) => (
+              <SearchableSelect
+                options={provinceOptions}
+                value={provinceId}
+                isLoading={isLoadingProvinces}
+                onChange={(val) => {
+                  setProvinceId(val)
+                  setWardId('')
+                  const name = provinces.find((p: any) => String(p.id) === val)?.full_name || ''
+                  field.onChange(name)
+                  setValue('ward', '')
+                }}
+                placeholder={field.value || 'Select province'}
+              />
+            )}
           />
+          {errors.province && <p className='text-xs text-red-500 mt-1'>{String(errors.province.message)}</p>}
         </div>
 
         <div className='space-y-1.5'>
-          <label className='text-sm font-medium text-gray-700'>Quận / Huyện</label>
-          <SearchableSelect
-            options={wardOptions}
-            value={wardId}
-            disabled={!provinceId}
-            isLoading={isLoadingWards}
-            onChange={(val) => {
-              setWardId(val)
-              const name = wards.find((w: any) => w.id === val)?.full_name || ''
-              setFormData((prev) => ({ ...prev, ward: name }))
-            }}
-            placeholder={formData.ward || 'Chọn Quận/Huyện'}
+          <label className='text-sm font-medium text-gray-700'>Ward</label>
+          <Controller
+            name='ward'
+            control={control}
+            render={({ field }) => (
+              <SearchableSelect
+                options={wardOptions}
+                value={wardId}
+                disabled={!provinceId}
+                isLoading={isLoadingWards}
+                onChange={(val) => {
+                  setWardId(val)
+                  const name = wards.find((w: any) => String(w.id) === val)?.full_name || ''
+                  field.onChange(name)
+                }}
+                placeholder={field.value || 'Ward'}
+              />
+            )}
           />
+          {errors.ward && <p className='text-xs text-red-500 mt-1'>{String(errors.ward.message)}</p>}
         </div>
       </div>
 
       {/* Chi tiết */}
       <div className='space-y-1.5'>
-        <label className='text-sm font-medium text-gray-700'>Địa chỉ cụ thể</label>
-        <textarea
-          rows={2}
-          className='w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-500 resize-none transition-colors'
-          placeholder='Số nhà, tên đường, khu vực...'
-          value={formData.detail}
-          onChange={(e) => setFormData({ ...formData, detail: e.target.value })}
-          required
+        <label className='text-sm font-medium text-gray-700'>Specific address</label>
+        <Controller
+          name='detail'
+          control={control}
+          render={({ field }) => (
+            <textarea
+              {...field}
+              rows={2}
+              className={`w-full p-2.5 border rounded-lg focus:outline-none resize-none transition-colors ${
+                errors.detail ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-pink-500'
+              }`}
+              placeholder='House number, street name, area...'
+            />
+          )}
         />
+        {errors.detail && <p className='text-xs text-red-500 mt-1'>{String(errors.detail.message)}</p>}
       </div>
 
       <div className='flex items-center justify-end pt-2'>
-        <label className='flex items-center gap-2 cursor-pointer group'>
-          <input
-            type='checkbox'
-            checked={formData.isDefault}
-            onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-            className='w-4 h-4 text-pink-600 rounded border-gray-300 focus:ring-pink-500 cursor-pointer'
-          />
-          <span className='text-sm text-gray-700 select-none group-hover:text-pink-600 transition-colors'>
-            Đặt làm địa chỉ mặc định
-          </span>
-        </label>
+        <Controller
+          name='isDefault'
+          control={control}
+          render={({ field }) => (
+            <label className='flex items-center gap-2 cursor-pointer group'>
+              <input
+                type='checkbox'
+                checked={field.value}
+                onChange={field.onChange}
+                className='w-4 h-4 text-pink-600 rounded border-gray-300 focus:ring-pink-500 cursor-pointer'
+              />
+              <span className='text-sm text-gray-700 select-none group-hover:text-pink-600 transition-colors'>
+                Set as default
+              </span>
+            </label>
+          )}
+        />
       </div>
 
       {/* Footer Buttons */}
@@ -172,15 +228,15 @@ export default function AddressForm({ initialData, onSuccess, onCancel }: Addres
           onClick={onCancel}
           className='px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
         >
-          Hủy bỏ
+          Cancel
         </button>
         <button
           type='submit'
-          disabled={mutation.isPending}
+          disabled={isLoading}
           className='flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-pink-600 rounded-lg hover:bg-pink-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-sm'
         >
-          {mutation.isPending ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}
-          {initialData ? 'Lưu thay đổi' : 'Thêm địa chỉ'}
+          {isLoading ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}
+          {initialData ? 'Save Changes' : 'Add Address'}
         </button>
       </div>
     </form>

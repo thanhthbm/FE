@@ -6,7 +6,7 @@ import { toast } from 'react-toastify'
 export const useAddress = () => {
   const queryClient = useQueryClient()
 
-  const key = ['address']
+  const key = ['addresses']
 
   const addressQuery = useQuery({
     queryKey: key,
@@ -25,7 +25,7 @@ export const useAddress = () => {
       })
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Lỗi khi thêm địa chỉ')
+      toast.error(error.response?.data?.message || 'Error adding address')
     }
   })
 
@@ -33,10 +33,10 @@ export const useAddress = () => {
     mutationFn: ({ id, body }: { id: string; body: Omit<Address, 'id'> }) => addressApi.updateAddress(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: key })
-      toast.success('Cập nhật địa chỉ thành công')
+      toast.success('Address updated successfully')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Lỗi khi cập nhật')
+      toast.error(error.response?.data?.message || 'Error updating address')
     }
   })
 
@@ -44,10 +44,10 @@ export const useAddress = () => {
     mutationFn: (id: string) => addressApi.deleteAddress(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: key })
-      toast.success('Đã xóa địa chỉ')
+      toast.success('Address deleted')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Không thể xóa địa chỉ này')
+      toast.error(error.response?.data?.message || 'Cannot delete this address')
     }
   })
 
@@ -55,10 +55,10 @@ export const useAddress = () => {
     mutationFn: (id: string) => addressApi.setDefault(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: key })
-      toast.success('Đã thay đổi địa chỉ mặc định')
+      toast.success('Default address changed')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Lỗi khi đặt mặc định')
+      toast.error(error.response?.data?.message || 'Error setting default address')
     }
   })
 

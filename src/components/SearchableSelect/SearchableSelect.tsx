@@ -52,7 +52,7 @@ const SearchableSelect = ({
     return (
       <div className='w-full h-10 px-4 py-2 flex items-center gap-2 border border-gray-300 rounded-lg bg-gray-50'>
         <Loader2 className='h-4 w-4 animate-spin' />
-        <span className='text-sm text-gray-500'>Đang tải...</span>
+        <span className='text-sm text-gray-500'>Loading...</span>
       </div>
     )
   }
@@ -70,7 +70,7 @@ const SearchableSelect = ({
       styles={customStyles}
       menuPortalTarget={document.body}
       menuPosition='fixed'
-      noOptionsMessage={() => 'Không tìm thấy kết quả'}
+      noOptionsMessage={() => 'No result found'}
     />
   )
 }
