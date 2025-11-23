@@ -8,21 +8,22 @@ import { CreateOrderRequest } from 'src/types/order.type'
 export const useOrder = () => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { clearCart } = useCart()
   const [searchParams] = useSearchParams()
+
+  const { clearCart } = useCart()
 
   const createOrderMutation = useMutation({
     mutationFn: (body: CreateOrderRequest) => orderApi.createOrder(body),
     onSuccess: (response) => {
       const data = response.data?.data
 
-      clearCart()
-
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
-
       if (data?.paymentUrl) {
         window.location.href = data.paymentUrl
       } else {
+        clearCart()
+        queryClient.invalidateQueries({ queryKey: ['cart'] })
+        queryClient.invalidateQueries({ queryKey: ['orders'] }) // Refresh list đơn hàng
+
         toast.success('Order placed successfully!')
         navigate('/profile/orders')
       }

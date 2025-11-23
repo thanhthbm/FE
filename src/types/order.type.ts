@@ -72,7 +72,5 @@ export type OrderDTO = {
 export type TransactionResult = {
   status: 'success' | 'failed' | string
   orderId: string
-  totalPrice: number
-  paymentTime: Date
-  transactionId: string
+  message: string
 }

@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -5,22 +6,26 @@ import { useOrder } from 'src/hooks/useOrder'
 
 const PaymentReturn = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const { verifyPayment, isVerifyingPayment, isVerifySuccess, isVerifyError } = useOrder()
 
   useEffect(() => {
     if (isVerifySuccess && verifyPayment) {
+      queryClient.invalidateQueries({ queryKey: ['cart'] })
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+
       if (verifyPayment.status === 'success') {
         toast.success('Payment successful!')
       } else {
         toast.error('Payment failed or cancelled!')
       }
     }
+
     if (isVerifyError) {
       toast.error('Transaction verification failed!')
     }
-  }, [isVerifySuccess, isVerifyError, verifyPayment])
-
+  }, [isVerifySuccess, isVerifyError, verifyPayment, queryClient])
 
   return (
     <div className='container mx-auto p-10 text-center'>

@@ -104,11 +104,13 @@ const OrderList = () => {
                   </Link> */}
 
                   {/* Contextual Actions */}
-                  {order.orderStatus === 'PENDING' && order.paymentMethod !== 'COD' && (
-                    <button className='px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium shadow-sm'>
-                      Pay Now
-                    </button>
-                  )}
+                  {order.orderStatus === 'PENDING' &&
+                    order.paymentMethod !== 'COD' &&
+                    order.paymentInfo?.paymentStatus !== 'COMPLETED' && (
+                      <button className='px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium shadow-sm'>
+                        Pay Now
+                      </button>
+                    )}
 
                   {order.orderStatus === 'DELIVERED' && (
                     <button className='px-4 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm font-medium shadow-sm'>
