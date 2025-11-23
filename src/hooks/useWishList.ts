@@ -16,6 +16,7 @@ export const useWishList = () => {
   })
 
   const wishlistItems = wishlistQuery.data?.data.data || []
+  const wishlistCount = wishlistItems.length
 
   const isInWishList = (productId: string) => wishlistItems.some((item) => item.id === productId)
 
@@ -40,6 +41,7 @@ export const useWishList = () => {
 
   return {
     wishlistItems,
+    wishlistCount,
     isLoading: wishlistQuery.isLoading,
     isError: wishlistQuery.isError,
     isInWishList,

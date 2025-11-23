@@ -19,6 +19,9 @@ import OAuth2Callback from './components/OAuth2Callback'
 import ProfileLayout from './layouts/ProfileLayout'
 import Profile from './pages/Profile'
 import AddressBook from './pages/AddressBook'
+import Checkout from './pages/Checkout'
+import OrderList from './pages/OrderList'
+import PaymentReturn from './pages/PaymentReturn'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AuthContext)
@@ -73,8 +76,16 @@ export default function useRouteElements() {
 
                 { path: 'address', element: <AddressBook /> },
 
-                { path: 'orders', element: <div>Order History</div> }
+                { path: 'orders', element: <OrderList /> }
               ]
+            },
+            {
+              path: 'checkout',
+              element: <Checkout />
+            },
+            {
+              path: 'vnpay-payment',
+              element: <PaymentReturn />
             }
           ]
         },

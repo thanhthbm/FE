@@ -2,12 +2,14 @@ import React, { useState } from 'react'
 import { Search, Heart, User, ShoppingCart } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 import useCart from '../../hooks/useCart' // Import hook useCart
+import { useWishList } from 'src/hooks/useWishList'
 
 export default function Header() {
   const [showDropdown, setShowDropdown] = useState(false)
 
   // Lấy tổng số lượng sản phẩm từ React Query (Global State)
   const { totalQuantity } = useCart()
+  const { wishlistCount } = useWishList()
 
   return (
     <header className='bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm'>
@@ -73,6 +75,11 @@ export default function Header() {
             {/* Wishlist Icon */}
             <Link to='/wishlist' className='p-2 hover:bg-gray-100 rounded-lg transition-colors relative group'>
               <Heart className='w-6 h-6 text-gray-700 group-hover:text-pink-600 transition-colors' />
+              {wishlistCount > 0 && (
+                <span className='absolute top-0 right-0 -mt-1 -mr-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-600 text-[10px] font-bold text-white shadow-sm border-2 border-white'>
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                </span>
+              )}
             </Link>
 
             {/* User Icon with Dropdown */}
@@ -96,7 +103,7 @@ export default function Header() {
                       My Profile
                     </Link>
                     <Link
-                      to='/orders'
+                      to='/profile/orders'
                       className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-pink-600 transition-colors'
                     >
                       My Orders

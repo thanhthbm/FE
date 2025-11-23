@@ -3,6 +3,7 @@ import { Minus, Plus, ArrowLeft, ArrowRight, CreditCard, Trash2 } from 'lucide-r
 import { Link } from 'react-router-dom'
 import { CartItem } from '../../types/cartItem.type'
 import useCart from '../../hooks/useCart'
+import PaymentMethod from 'src/components/PaymentMethod'
 
 export default function Cart() {
   const { cartItems, totalPrice, updateQuantity, removeFromCart, isUpdating, clearCart, isClearing } = useCart()
@@ -141,10 +142,7 @@ export default function Cart() {
                       </div>
 
                       <div className='text-right'>
-                        <p className='text-lg font-bold text-gray-900'>
-                          {/* Format tiền tệ, hoặc dùng hàm formatPriceToStr của bạn */}
-                          {item.price.toLocaleString()} VNĐ
-                        </p>
+                        <p className='text-lg font-bold text-gray-900'>{item.price.toLocaleString()} VNĐ</p>
                         {item.quantity > 1 && (
                           <p className='text-xs text-gray-500'>
                             {(item.price * item.quantity).toLocaleString()} VNĐ total
@@ -165,7 +163,7 @@ export default function Cart() {
 
               {/* Continue Shopping Link */}
               <Link
-                to='/products'
+                to='/'
                 className='flex items-center gap-2 text-pink-600 hover:text-pink-700 font-medium mt-6 inline-block transition-colors'
               >
                 <ArrowLeft className='w-5 h-5' />
@@ -182,15 +180,15 @@ export default function Cart() {
               <div className='space-y-4 mb-6'>
                 <div className='flex justify-between text-gray-700'>
                   <span>Subtotal</span>
-                  <span className='font-semibold'>{subtotal.toLocaleString()} VNĐ</span>
+                  <span className='font-semibold'>{subtotal.toLocaleString()} VND</span>
                 </div>
                 <div className='flex justify-between text-gray-700'>
                   <span>Shipping</span>
-                  <span className='font-semibold'>{shipping.toLocaleString()} VNĐ</span>
+                  <span className='font-semibold'>{shipping.toLocaleString()} VND</span>
                 </div>
                 <div className='flex justify-between text-gray-700'>
                   <span>Taxes (8%)</span>
-                  <span className='font-semibold'>{taxes.toLocaleString()} VNĐ</span>
+                  <span className='font-semibold'>{taxes.toLocaleString()} VND</span>
                 </div>
                 <div className='border-t border-gray-200 pt-4'>
                   <div className='flex justify-between text-lg font-bold text-gray-900'>
@@ -227,16 +225,7 @@ export default function Cart() {
               </Link>
 
               {/* Payment Methods */}
-              <div className='text-center'>
-                <p className='text-sm text-gray-600 mb-3'>Accepted Payment Methods</p>
-                <div className='flex justify-center gap-3'>
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className='w-12 h-8 bg-gray-100 rounded flex items-center justify-center'>
-                      <CreditCard className='w-6 h-6 text-gray-400' />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <PaymentMethod />
             </div>
           </div>
         </div>

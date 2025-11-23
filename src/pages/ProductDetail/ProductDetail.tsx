@@ -1,67 +1,33 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Heart, Minus, Plus, ChevronDown, ShoppingCart } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import { useParams } from 'react-router-dom'
-import { productApi } from '../../apis/product.api'
 import { formatPriceToStr } from '../../utils/format'
 import useCart from '../../hooks/useCart'
 import { useWishList } from '../../hooks/useWishList'
+import { useProductDetail } from '../../hooks/useProductDetail'
 
 export default function ProductDetail() {
-  const { productId } = useParams<{ productId: string }>()
-  const [selectedColor, setSelectedColor] = useState<string>('')
-  const [selectedSize, setSelectedSize] = useState<string>('')
-  const [quantity, setQuantity] = useState(1)
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const {
+    product,
+    isLoading,
+    isError,
+    images,
+    uniqueColors,
+    uniqueSizes,
+    selectedVariant,
+    selectedColor,
+    setSelectedColor,
+    selectedSize,
+    setSelectedSize,
+    quantity,
+    handleQuantityChange,
+    selectedImageIndex,
+    setSelectedImageIndex
+  } = useProductDetail()
 
   const { addToCart, isAdding } = useCart()
   const { isInWishList, toggleWishList, isToggling } = useWishList()
 
-  // Fetch product data
-  const productQuery = useQuery({
-    queryKey: ['product', productId],
-    queryFn: () => productApi.getProductById(productId as string),
-    enabled: !!productId
-  })
-
-  const product = productQuery.data
   const isFavorite = product ? isInWishList(product.id) : false
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const uniqueColors = product?.variants
-    ? [...new Set(product.variants.map((v) => v.color).filter((c): c is string => !!c))]
-    : []
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const uniqueSizes = product?.variants
-    ? [...new Set(product.variants.map((v) => v.size).filter((s): s is string => !!s))]
-    : []
-
-  const images = product?.productResources
-    ? product.productResources
-        .filter((r) => r.type === 'image' && r.url)
-        .sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0))
-        .map((r) => r.url as string)
-    : []
-
-  useEffect(() => {
-    window.scrollTo(0, 0)
-
-    if (product && product.variants && product.variants.length > 0) {
-      if (!selectedColor && uniqueColors.length > 0) setSelectedColor(uniqueColors[0])
-      if (!selectedSize && uniqueSizes.length > 0) setSelectedSize(uniqueSizes[0])
-    }
-  }, [product, uniqueColors, uniqueSizes, selectedColor, selectedSize])
-
-  const selectedVariant = product?.variants?.find((v) => v.color === selectedColor && v.size === selectedSize)
-
-  const handleQuantityChange = (type: 'increase' | 'decrease') => {
-    if (type === 'increase' && selectedVariant?.stockQuantity && quantity < selectedVariant.stockQuantity) {
-      setQuantity(quantity + 1)
-    } else if (type === 'decrease' && quantity > 1) {
-      setQuantity(quantity - 1)
-    }
-  }
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return
@@ -82,7 +48,7 @@ export default function ProductDetail() {
     toggleWishList(product.id)
   }
 
-  if (productQuery.isLoading) {
+  if (isLoading) {
     return (
       <div className='bg-white min-h-screen flex items-center justify-center'>
         <div className='text-center'>
@@ -93,7 +59,7 @@ export default function ProductDetail() {
     )
   }
 
-  if (productQuery.error || !product) {
+  if (isError || !product) {
     return (
       <div className='bg-white min-h-screen flex items-center justify-center'>
         <div className='text-center'>
@@ -274,7 +240,6 @@ export default function ProductDetail() {
                 className='flex-1 bg-pink-600 hover:bg-pink-700 text-white py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed'
               >
                 <ShoppingCart className='w-5 h-5' />
-                {/* Hiển thị trạng thái loading */}
                 {isAdding ? 'Adding...' : 'Add to Cart'}
               </button>
 

@@ -48,3 +48,5 @@ export type Product = {
   slug?: string | null
   newArrival?: boolean
 }
+
+
