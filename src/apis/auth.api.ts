@@ -3,8 +3,9 @@ import http from '../utils/http'
 
 export const URL_LOGIN = 'api/auth/login'
 export const URL_REGISTER = 'api/auth/register'
-export const URL_VERIFY = 'api/auth/verify'
+export const URL_VERIFY = 'api/otp/verify'
 export const URL_REFRESH = 'api/auth/refresh'
+export const URL_GET_OTP = 'api/otp'
 
 export interface ApiResponse<T> {
   statusCode: number
@@ -25,6 +26,9 @@ const authApi = {
   },
   refresh() {
     return http.post<ApiResponse<UserToken>>(URL_REFRESH, {}, { withCredentials: true })
+  },
+  getOTP({ username }: { username: string }) {
+    return http.post<ApiResponse<string>>(URL_GET_OTP, { username })
   }
 }
 
