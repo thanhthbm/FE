@@ -22,6 +22,7 @@ import AddressBook from './pages/AddressBook'
 import Checkout from './pages/Checkout'
 import OrderList from './pages/OrderList'
 import PaymentReturn from './pages/PaymentReturn'
+import AdminApp from './pages/Admin/AdminApp'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useContext(AuthContext)
@@ -86,7 +87,8 @@ export default function useRouteElements() {
             {
               path: 'vnpay-payment',
               element: <PaymentReturn />
-            }
+            },
+            { path: 'admin/*', element: <AdminApp /> }
           ]
         },
 

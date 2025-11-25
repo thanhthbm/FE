@@ -19,7 +19,7 @@ const NewArrival = () => {
   })
 
   if (newArrivalProductsQuery.isError) {
-    return <div className='flex items-center'>Error loading new</div>
+    return <div className='col-span-4 flex justify-center items-center h-64'>Error loading new products</div>
   }
 
   const products = newArrivalProductsQuery.data?.data?.data?.result
@@ -30,7 +30,9 @@ const NewArrival = () => {
         <h2 className='text-3xl font-bold text-gray-900 text-center mb-12'>New Arrivals</h2>
         <div className='grid grid-cols-4 gap-6'>
           {newArrivalProductsQuery.isLoading ? (
-            <Skeleton />
+            <div className='col-span-4 flex justify-center items-center h-64'>
+              <Skeleton />
+            </div>
           ) : (
             products?.map((product) => (
               <Link
